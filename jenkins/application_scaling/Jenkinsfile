@@ -1,0 +1,16 @@
+String CLUSTER_NAME = env.CLUSTER_NAME
+String WEB_REPLICA_COUNT = env.WEB_REPLICA_COUNT
+String API_REPLICA_COUNT = env.API_REPLICA_COUNT
+node {
+    stage('Access Demo Cluster'){
+        sh 'aws eks --region us-east-1 update-kubeconfig --name "' + CLUSTER_NAME + '"'
+    }
+
+    stage('Scale Web Application'){
+        sh 'kubectl scale --replicas="' + WEB_REPLICA_COUNT + '" deployment toptal-web'
+    }
+
+    stage('Scale API Application'){
+        sh 'kubectl scale --replicas="' + API_REPLICA_COUNT + '" deployment toptal-api'
+    }
+}

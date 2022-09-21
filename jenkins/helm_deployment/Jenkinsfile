@@ -1,0 +1,39 @@
+String branchName = env.BRANCH_NAME
+String clustername = env.CLUSTER_NAME
+String gitCredentials = "gitlab"
+String repoUrl = "git@git.toptal.com:raj/koppularajender18.git"
+
+node {
+  // Start Stages
+    stage('Clone') {
+      // Clones the repository from the current branch name
+        echo 'Make the output directory'
+        sh 'mkdir -p build'
+
+        echo 'Cloning files from (branch: "' + branchName + '" )'
+        dir('build') {
+            git branch: branchName, credentialsId: 	gitCredentials, url: repoUrl
+        }
+    }
+
+    stage('Access Demo Cluster'){
+        sh 'echo $clustername || echo $CLUSTER_NAME || true'
+        sh 'aws eks --region us-east-1 update-kubeconfig --name "' + clustername + '"'
+    }
+
+    stage('Deploy Application'){
+        if ( params.INSTALL_APP ) {
+            sh 'helm upgrade --install --namespace default toptal build/helm-charts/ --debug'
+        } else {
+            echo 'skipping installation'
+        }
+    }
+
+    stage('Unisntall Application'){
+        if ( params.UNINSTALL_APP ) {
+            sh 'helm uninstall toptal'
+        } else {
+            echo 'skipping installation'
+        }
+    }
+}

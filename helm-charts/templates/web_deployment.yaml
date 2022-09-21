@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-web
+spec:
+  replicas: {{ .Values.web.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-web
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-web
+      name: {{ .Release.Name }}-web
+    spec:
+      serviceAccount: {{ .Values.global.serviceaccount.name }}
+      containers:
+      - name: web
+        image: "{{ .Values.global.imageCredentials.repositoryUriPrefix }}/{{ .Values.web.image.name }}:{{ .Values.web.image.tag }}"
+        imagePullPolicy: "{{ .Values.web.image.pullPolicy }}"
+        env:
+        - name: PORT
+          value: "{{ .Values.web.service.port }}"
+        - name: API_HOST
+          value: "http://{{ .Release.Name }}-api-svc:{{ .Values.api.service.port}}"
+
+        ports:
+        - containerPort: 80
+          protocol: TCP
+          name: web
+

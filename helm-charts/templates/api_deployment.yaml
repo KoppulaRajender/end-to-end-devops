@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-api
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-api
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-api
+      name: {{ .Release.Name }}-api
+    spec:
+      serviceAccount: {{ .Values.global.serviceaccount.name }}
+      containers:
+      - name: api
+        image: "{{ .Values.global.imageCredentials.repositoryUriPrefix }}/{{ .Values.api.image.name }}:{{ .Values.api.image.tag }}"
+        imagePullPolicy: "{{ .Values.api.image.pullPolicy }}"
+        env:
+        - name: DBPASS
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-database-password
+              key: db-password
+        - name: PORT
+          value: "{{ .Values.api.service.port }}"
+        - name: DBPORT
+          value: "{{ .Values.db.dbport }}"
+        - name: DBHOST
+          value: {{ .Release.Name }}-database-svc
+        - name: DBUSER
+          value: "{{ .Values.db.dbuser }}"
+        - name: DB
+          value: "{{ .Values.db.dbname }}"
+        ports:
+        - containerPort: 8018
+          protocol: TCP
+

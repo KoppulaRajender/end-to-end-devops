@@ -1,0 +1,33 @@
+String branchName = env.BRANCH_NAME
+String gitCredentials = "gitlab"
+String repoUrl = "git@git.toptal.com:raj/koppularajender18.git"
+
+node {
+  // Start Stages
+    stage('Clone') {
+      // Clones the repository from the current branch name
+        echo 'Make the output directory'
+        sh 'mkdir -p build'
+
+        echo 'Cloning files from (branch: "' + branchName + '" )'
+        dir('build') {
+            git branch: branchName, credentialsId: 	gitCredentials, url: repoUrl
+        }
+}
+
+
+    stage('Build'){
+        sh 'cd build/node-3tier-app2/api && docker build -t koppula18/toptal_api:$API_TAG .'
+        sh 'cd build/node-3tier-app2/web && docker build -t koppula18/toptal_api:$WEB_TAG .'
+    }
+
+    stage('Docker Login'){
+            withCredentials([string(credentialsId: 'DOCKER_PASSWORD', variable: 'PASSWORD')]) {
+            sh 'docker login -u koppula18 -p $PASSWORD'
+        }
+    }
+
+    stage('Docker Push') {
+        sh 'docker push koppula18/toptal_api:$API_TAG && docker push koppula18/toptal_api:$WEB_TAG'
+    }
+}
